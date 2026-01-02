@@ -1,14 +1,51 @@
+"use client"
 import { AuthButton } from "@/components/auth-button";
 import { PostCard } from "@/components/post-card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  author: {
+    name: string | null;
+    image: string | null;
+  };
+  _count: {
+    comments: number;
+    likes: number;
+  }
+}
+
 
 export default function Home() {
-  const isAdmin = true;
-  const posts = [];
-  const loading = true;
+  const { data: session } = useSession();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setloading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch("/api/posts");
+      const data = await response.json();
+      setPosts(data);
+    } catch (error) {
+      console.error("Failed to fetch posts:", error);
+    } finally {
+      setloading(false);
+    }
+  };
+
+  const isAdmin = session?.user.role === "ADMIN"
 
   return (
     <div className="min-h-screen bg-background">
